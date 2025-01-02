@@ -1,71 +1,55 @@
 <template>
   <div
       v-if="pageflag"
-      class="left_boottom_wrap beautify-scroll-def"
+      class="left_extra_wrap beautify-scroll-def"
       :class="{ 'overflow-y-auto': !sbtxSwiperFlag }"
   >
     <component :is="components" :data="list" :class-option="defaultOption">
-      <ul class="left_boottom">
-        <li class="left_boottom_item" v-for="(item, i) in list" :key="i">
-          <span class="orderNum doudong">{{ i + 1 }}</span>
+      <ul class="left_extra">
+        <li class="left_extra_item" v-for="(item, i) in list" :key="i">
           <div class="inner_right">
             <div class="dibu"></div>
             <div class="flex">
               <div class="info">
                 <span class="labels">设备名称：</span>
                 <span class="contents zhuyao doudong wangguan">
-                  {{ item.deviceName || item.modelName }}</span>
+                  {{ deviceName }}</span>
               </div>
               <div class="info">
-                <span class="labels">时间：</span>
+                <span class="labels">更新时间：</span>
                 <span class="contents " style="font-size: 12px">
-                  {{ item.masterLastCommTime || item.lastOfflineTime }}</span>
+                  {{ updateTime }}</span>
               </div>
-            </div>
-
-            <span
-                class="types doudong"
-                :class="{
-                typeRed: item.state === 0 || item.masterOnline === 0,
-                typeGreen: item.state === 1 || item.masterOnline === 1,
+              <span
+                  class="types doudong"
+                  :class="{
+                typeRed: item.status === '异常',
+                typeGreen: item.status === '正常',
               }"
-            >{{ item.state === 1 || item.masterOnline === 1 ? "在线" : "离线" }}</span>
-
-            <!-- 如果是温度传感器，显示温度阈值等信息 -->
-            <div v-if="isTemperatureSensor(item)" class="flex">
-              <div class="info addresswrap">
-                <span class="labels">当前温度：</span>
-                <span class="contents zhuyao doudong wangguan" style="font-size: 20px">
-                {{ item.currentValue || '--' }}</span>
-              </div>
-              <div class="info addresswrap">
-                <span class="labels">高温报警阈值：</span>
-                <span class="contents ciyao" style="font-size: 12px">
-                {{ item.maxValue || '--' }}</span>
-              </div>
-              <div class="info addresswrap">
-                <span class="labels">低温报警阈值：</span>
-                <span class="contents ciyao" style="font-size: 12px">
-                {{ item.lowValue || '--' }}</span>
-              </div>
+              >
+              {{ item.status }}
+              <span v-if="item.trend === 'up'">⬆️</span>
+              <span v-if="item.trend === 'down'">⬇️</span>
+            </span>
             </div>
-
-            <!-- 如果是其他设备，显示运营商服务、网关类型和信号质量 -->
-            <div v-else class="flex">
+            <div class="flex">
               <div class="info addresswrap">
-                <span class="labels">运营商：</span>
+                <span class="labels">数据类型：</span>
                 <span class="contents zhuyao doudong wangguan">
-                  {{ item.carrier || '--' }}</span>
+                  {{ item.name }}
+                </span>
               </div>
               <div class="info addresswrap">
-                <span class="labels">网关类型：</span>
-                <span class="contents ciyao">
-                  {{ getGatewayType(item.type) }}</span>
+                <span class="labels">当前值：</span>
+                <span class="contents zhuyao doudong wangguan" style="font-size: 20px">
+                  {{ item.value }}
+                </span>
               </div>
               <div class="info addresswrap">
-                <span class="labels">信号质量：</span>
-                <span class="contents ciyao">
-                  {{ item.signalIntensity || '--' }}dBm</span>
+                <span class="labels">上次值：</span>
+                <span class="contents ciyao" style="font-size: 12px">
+                  {{ item.previousValue }}
+                </span>
               </div>
             </div>
           </div>
@@ -74,19 +58,22 @@
     </component>
   </div>
 
-  <Reacquire v-else @onclick="getData" style="line-height: 200px"/>
+  <Reacquire v-else @onclick="fetchDeviceData" style="line-height: 200px"/>
 </template>
 
 <script>
+import axios from "axios";
 import vueSeamlessScroll from "vue-seamless-scroll"; // vue2引入方式
 import Kong from "../../components/kong.vue";
 
 export default {
-  components: {vueSeamlessScroll, Kong},
+  components: { vueSeamlessScroll, Kong },
   data() {
     return {
       list: [],
       pageflag: true,
+      updateTime: "", // 用于存储接口调用时间
+      deviceName: "", // 当前显示设备名称
       components: vueSeamlessScroll,
       defaultOption: {
         ...this.$store.state.setting.defaultOption,
@@ -94,8 +81,22 @@ export default {
         limitMoveNum: 5,
         step: 0,
       },
+      currentIndex: 0, // 当前请求设备的索引
+      previousDataMap: {}, // 用于存储每个设备的上次数据
+      apiList: [
+        { url: "/api/devices", name: "7号楼断路器" },
+        { url: "/api/devices1", name: "4号楼探测器" },
+        { url: "/api/devices2", name: "6号楼探测器" },
+        { url: "/api/devices3", name: "4号楼断路器" },
+        { url: "/api/devices4", name: "3号楼断路器" },
+        { url: "/api/devices5", name: "3号楼探测器" },
+        { url: "/api/devices6", name: "2号楼断路器" },
+        { url: "/api/devices7", name: "2号楼探测器" },
+        { url: "/api/devices8", name: "6号楼断路器" },
+      ],
     };
   },
+
   computed: {
     sbtxSwiperFlag() {
       let sbtxSwiper = this.$store.state.setting.sbtxSwiper;
@@ -107,75 +108,109 @@ export default {
       return sbtxSwiper;
     },
   },
+
   mounted() {
-    this.getData();
+    this.fetchDeviceData();
     this.getDataHandle = setInterval(() => {
-      this.getData();
+      this.currentIndex = (this.currentIndex + 1) % this.apiList.length;
+      this.fetchDeviceData();
     }, 10000);
   },
   beforeDestroy() {
     clearInterval(this.getDataHandle);
   },
-  methods: {
-    async getData() {
-      this.pageflag = true;
-      try {
-        // 请求两个接口数据
-        const [smokeData, deviceData] = await Promise.all([
-          this.$axios.get('/api/smoke'),
-          this.$axios.get('/proxy/deviceList'),
-        ]);
 
-        if (smokeData.data.success && deviceData.data.success) {
-          // 合并数据，将设备数据和烟雾传感器数据合并为 list 列表
-          this.list = [...smokeData.data.data, ...deviceData.data.data.devices];
+  methods: {
+    fetchDeviceData() {
+      this.pageflag = true;
+      const { url, name } = this.apiList[this.currentIndex];
+      this.deviceName = name;
+
+      this.$axios.get(url).then((res) => {
+        if (res.data.success) {
+          const snap = res.data.data.list[0]; // 获取最新的数据
+          const currentTime = new Date().toLocaleString();
+          this.updateTime = currentTime;
+
+          // 获取或初始化该设备的 previousData
+          if (!this.previousDataMap[url]) {
+            this.previousDataMap[url] = [];
+          }
+          const previousData = this.previousDataMap[url];
+
+          // 创建新的数据列表
+          const newList = [
+            { name: "A相电压", value: parseFloat(snap.a_voltage) },
+            { name: "B相电压", value: parseFloat(snap.b_voltage) },
+            { name: "C相电压", value: parseFloat(snap.c_voltage) },
+            { name: "A相电流", value: parseFloat(snap.a_current) },
+            { name: "B相电流", value: parseFloat(snap.b_current) },
+            { name: "C相电流", value: parseFloat(snap.c_current) },
+            { name: "剩余电流", value: parseFloat(snap.remaindeRelectric) },
+          ];
+
+          // 更新 list 并计算趋势和状态
+          this.list = newList.map((item, index) => {
+            const previousValue = previousData[index] ? previousData[index].value : item.value;
+            const trend = this.calculateTrend(item.value, previousValue);
+            const status = this.calculateStatus(item.value, previousValue);
+
+            return {
+              ...item,
+              previousValue,
+              trend,
+              status,
+            };
+          });
+
+          // 更新 previousDataMap 中的当前设备数据
+          this.previousDataMap[url] = [...this.list];
+
+          // 将异常项目移到顶部
+          this.list.sort((a, b) => (a.status === "异常" ? -1 : 1));
+
           let timer = setTimeout(() => {
             clearTimeout(timer);
-            this.defaultOption.step =
-                this.$store.state.setting.defaultOption.step;
+            this.defaultOption.step = this.$store.state.setting.defaultOption.step;
           }, this.$store.state.setting.defaultOption.waitTime);
         } else {
           this.pageflag = false;
           this.$Message({
-            text: "获取数据失败",
+            text: res.data.msg,
             type: "warning",
           });
         }
-      } catch (error) {
-        console.error('数据请求失败:', error);
+      }).catch(error => {
+        console.error("接口请求失败:", error);
         this.pageflag = false;
-        this.$Message({
-          text: "数据请求失败",
-          type: "error",
-        });
-      }
+      });
     },
-    // 判断是否为温度传感器
-    isTemperatureSensor(item) {
-      return item.modelName && (item.modelName.includes("感温") || item.modelName.includes("烟雾"));
-    },
-    // 获取网关类型的描述
-    getGatewayType(type) {
-      switch (type) {
-        case 1:
-          return "以太网";
-        case 2:
-          return "4G";
-        case 3:
-          return "WiFi";
-        default:
-          return "未知";
+
+    calculateTrend(currentValue, previousValue) {
+      if (currentValue > previousValue) {
+        return "up";
+      } else if (currentValue < previousValue) {
+        return "down";
       }
+      return "normal";
+    },
+
+    calculateStatus(currentValue, previousValue) {
+      const threshold = 0.2; // 波动阈值，超过则为异常
+      if (Math.abs(currentValue - previousValue) / (previousValue || 1) > threshold) {
+        return "异常";
+      }
+      return "正常";
     },
   },
 };
 </script>
 
 <style lang='scss' scoped>
-.left_boottom_wrap {
+.left_extra_wrap {
   overflow: hidden;
   width: 100%;
-  height: 90%;
+  height: 100%;
 }
 
 .doudong {
@@ -190,11 +225,11 @@ export default {
   overflow-y: auto;
 }
 
-.left_boottom {
+.left_extra {
   width: 100%;
   height: 100%;
 
-  .left_boottom_item {
+  .left_extra_item {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -203,7 +238,7 @@ export default {
     margin: 10px 0;
 
     .orderNum {
-      margin: 0 1px 0 -20px;
+      margin: 0 16px 0 -20px;
     }
 
     .info {
@@ -270,8 +305,9 @@ export default {
     }
 
     .types {
-      width: 30px;
+      width: 50px;
       flex-shrink: 0;
+      text-align: center;
     }
 
     .typeRed {

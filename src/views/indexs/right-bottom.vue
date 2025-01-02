@@ -1,41 +1,71 @@
 <template>
-  <div v-if="pageflag" class="right_center_wrap beautify-scroll-def" :class="{ 'overflow-y-auto': !sbtxSwiperFlag }">
+  <div
+      v-if="pageflag"
+      class="left_boottom_wrap beautify-scroll-def"
+      :class="{ 'overflow-y-auto': !sbtxSwiperFlag }"
+  >
     <component :is="components" :data="list" :class-option="defaultOption">
-      <ul class="right_center ">
-        <li class="right_center_item" v-for="(item, i) in list" :key="i">
-          <span class="orderNum">{{ i + 1 }}</span>
+      <ul class="left_boottom">
+        <li class="left_boottom_item" v-for="(item, i) in list" :key="i">
+          <span class="orderNum doudong">{{ i + 1 }}</span>
           <div class="inner_right">
             <div class="dibu"></div>
             <div class="flex">
               <div class="info">
-                <span class="labels ">设备ID：</span>
-                <span class="contents zhuyao"> {{ item.serialNumber }}</span>
+                <span class="labels">设备名称：</span>
+                <span class="contents zhuyao doudong wangguan">
+                  {{ item.deviceName || item.modelName }}</span>
               </div>
               <div class="info">
-                <span class="labels">型号：</span>
-                <span  style="font-size: 13px" class="contents "> {{ item.modelName }}</span>
-              </div>
-              <div class="info">
-                <span class="labels">告警值：</span>
-                <span class="contents warning"> {{ item.alertValue }}</span>
-              </div>
-            </div>
-
-            <div class="flex">
-              <div class="info">
-                <span class="labels"> 地址：</span>
-                <span class="contents ciyao" style="font-size:12px"> {{ item.address }}</span>
-              </div>
-              <div class="info time">
                 <span class="labels">时间：</span>
-                <span class="contents" style="font-size:12px"> {{ item.alarmDate }}</span>
+                <span class="contents " style="font-size: 12px">
+                  {{ item.masterLastCommTime || item.lastOfflineTime }}</span>
               </div>
             </div>
 
-            <div class="flex">
-              <div class="info">
-                <span class="labels">报警内容：</span>
-                <span class="contents warning" :class="{ warning: item.alertdetail }"> {{ item.content || '无' }}</span>
+            <span
+                class="types doudong"
+                :class="{
+                typeRed: item.state === 0 || item.masterOnline === 0,
+                typeGreen: item.state === 1 || item.masterOnline === 1,
+              }"
+            >{{ item.state === 1 || item.masterOnline === 1 ? "在线" : "离线" }}</span>
+
+            <!-- 如果是温度传感器，显示温度阈值等信息 -->
+            <div v-if="isTemperatureSensor(item)" class="flex">
+              <div class="info addresswrap">
+                <span class="labels">当前温度：</span>
+                <span class="contents zhuyao doudong wangguan" style="font-size: 20px">
+                {{ item.currentValue || '--' }}</span>
+              </div>
+              <div class="info addresswrap">
+                <span class="labels">高温报警阈值：</span>
+                <span class="contents ciyao" style="font-size: 12px">
+                {{ item.maxValue || '--' }}</span>
+              </div>
+              <div class="info addresswrap">
+                <span class="labels">低温报警阈值：</span>
+                <span class="contents ciyao" style="font-size: 12px">
+                {{ item.lowValue || '--' }}</span>
+              </div>
+            </div>
+
+            <!-- 如果是其他设备，显示运营商服务、网关类型和信号质量 -->
+            <div v-else class="flex">
+              <div class="info addresswrap">
+                <span class="labels">运营商：</span>
+                <span class="contents zhuyao doudong wangguan">
+                  {{ item.carrier || '--' }}</span>
+              </div>
+              <div class="info addresswrap">
+                <span class="labels">网关类型：</span>
+                <span class="contents ciyao">
+                  {{ getGatewayType(item.type) }}</span>
+              </div>
+              <div class="info addresswrap">
+                <span class="labels">信号质量：</span>
+                <span class="contents ciyao">
+                  {{ item.signalIntensity || '--' }}dBm</span>
               </div>
             </div>
           </div>
@@ -43,41 +73,39 @@
       </ul>
     </component>
   </div>
-  <Reacquire v-else @onclick="getData" style="line-height:200px" />
+
+  <Reacquire v-else @onclick="getData" style="line-height: 200px"/>
 </template>
 
 <script>
-import { currentGET } from 'api/modules'
-import vueSeamlessScroll from 'vue-seamless-scroll'  // vue2引入方式
-import Kong from '../../components/kong.vue'
-export default {
-  components: { vueSeamlessScroll, Kong },
+import vueSeamlessScroll from "vue-seamless-scroll"; // vue2引入方式
+import Kong from "../../components/kong.vue";
 
+export default {
+  components: {vueSeamlessScroll, Kong},
   data() {
     return {
       list: [],
       pageflag: true,
+      components: vueSeamlessScroll,
       defaultOption: {
         ...this.$store.state.setting.defaultOption,
-        limitMoveNum: 3,
-        singleHeight: 250,
-        step:0,
-      }
+        singleHeight: 240,
+        limitMoveNum: 5,
+        step: 0,
+      },
     };
   },
   computed: {
     sbtxSwiperFlag() {
-      let ssyjSwiper = this.$store.state.setting.ssyjSwiper
-      if (ssyjSwiper) {
-        this.components = vueSeamlessScroll
+      let sbtxSwiper = this.$store.state.setting.sbtxSwiper;
+      if (sbtxSwiper) {
+        this.components = vueSeamlessScroll;
       } else {
-        this.components = Kong
+        this.components = Kong;
       }
-      return ssyjSwiper
-    }
-  },
-  created() {
-    this.getData()
+      return sbtxSwiper;
+    },
   },
   mounted() {
     this.getData();
@@ -89,66 +117,100 @@ export default {
     clearInterval(this.getDataHandle);
   },
   methods: {
-    getData() {
-      this.pageflag = true
-      currentGET('alarm').then(res => {
-        console.log('报警信息', res);
-        if (res.success) {
-          this.list = res.data
+    async getData() {
+      this.pageflag = true;
+      try {
+        // 请求两个接口数据
+        const [smokeData, deviceData] = await Promise.all([
+          this.$axios.get('/api/smoke'),
+          this.$axios.get('/proxy/deviceList'),
+        ]);
+
+        if (smokeData.data.success && deviceData.data.success) {
+          // 合并数据，将设备数据和烟雾传感器数据合并为 list 列表
+          this.list = [...smokeData.data.data, ...deviceData.data.data.devices];
           let timer = setTimeout(() => {
-            clearTimeout(timer)
-            this.defaultOption.step=this.$store.state.setting.defaultOption.step
+            clearTimeout(timer);
+            this.defaultOption.step =
+                this.$store.state.setting.defaultOption.step;
           }, this.$store.state.setting.defaultOption.waitTime);
         } else {
-          this.pageflag = false
-          this.$Message.warning(res.msg)
+          this.pageflag = false;
+          this.$Message({
+            text: "获取数据失败",
+            type: "warning",
+          });
         }
-      })
+      } catch (error) {
+        console.error('数据请求失败:', error);
+        this.pageflag = false;
+        this.$Message({
+          text: "数据请求失败",
+          type: "error",
+        });
+      }
+    },
+    // 判断是否为温度传感器
+    isTemperatureSensor(item) {
+      return item.modelName && (item.modelName.includes("感温") || item.modelName.includes("烟雾"));
+    },
+    // 获取网关类型的描述
+    getGatewayType(type) {
+      switch (type) {
+        case 1:
+          return "以太网";
+        case 2:
+          return "4G";
+        case 3:
+          return "WiFi";
+        default:
+          return "未知";
+      }
     },
   },
 };
 </script>
 
 <style lang='scss' scoped>
-.right_center {
+.left_boottom_wrap {
+  overflow: hidden;
+  width: 100%;
+  height: 90%;
+}
+
+.doudong {
+  overflow: hidden;
+  -webkit-backface-visibility: hidden;
+  -moz-backface-visibility: hidden;
+  -ms-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.overflow-y-auto {
+  overflow-y: auto;
+}
+
+.left_boottom {
   width: 100%;
   height: 100%;
 
-  .right_center_item {
+  .left_boottom_item {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: auto;
-    padding: 10px;
+    padding: 8px;
     font-size: 14px;
-    color: #fff;
+    margin: 10px 0;
 
     .orderNum {
-      margin: 0 20px 0 -20px;
-    }
-
-    .inner_right {
-      position: relative;
-      height: 100%;
-      width: 400px;
-      flex-shrink: 0;
-      line-height: 1.5;
-
-      .dibu {
-        position: absolute;
-        height: 2px;
-        width: 104%;
-        background-image: url("../../assets/img/zuo_xuxian.png");
-        bottom: -12px;
-        left: -2%;
-        background-size: cover;
-      }
+      margin: 0 1px 0 -20px;
     }
 
     .info {
       margin-right: 10px;
       display: flex;
       align-items: center;
+      color: #fff;
 
       .labels {
         flex-shrink: 0;
@@ -157,8 +219,8 @@ export default {
       }
 
       .zhuyao {
-        color: $primary-color;
-        font-size: 15px;
+        color: #1890ff;
+        font-size: 12px;
       }
 
       .ciyao {
@@ -166,18 +228,59 @@ export default {
       }
 
       .warning {
-        color: #e63c3c;
-        font-size: 20px;
+        color: #e6a23c;
+        font-size: 15px;
       }
     }
-  }
-}
 
-.right_center_wrap {
-  width: 100%;
-  height: 100%; // 固定高度
-}
-.overflow-y-auto {
-  overflow-y: auto;
+    .inner_right {
+      position: relative;
+      height: 100%;
+      width: 380px;
+      flex-shrink: 0;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+
+      .dibu {
+        position: absolute;
+        height: 2px;
+        width: 104%;
+        background-image: url("../../assets/img/zuo_xuxian.png");
+        bottom: -10px;
+        left: -2%;
+        background-size: cover;
+      }
+
+      .addresswrap {
+        width: 100%;
+        display: flex;
+        margin-top: 8px;
+      }
+    }
+
+    .wangguan {
+      color: #1890ff;
+      font-weight: 900;
+      font-size: 15px;
+      width: 80px;
+      flex-shrink: 0;
+    }
+
+    .types {
+      width: 30px;
+      flex-shrink: 0;
+    }
+
+    .typeRed {
+      color: #fc1a1a;
+    }
+
+    .typeGreen {
+      color: #29fc29;
+    }
+  }
 }
 </style>
