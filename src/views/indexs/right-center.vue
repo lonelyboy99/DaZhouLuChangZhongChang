@@ -15,17 +15,17 @@ import axios from "axios";
 export default {
   data() {
     return {
-      // API 列表
       apiList: [
-        {url: "/api/devices", name: "7号楼断路器"},
-        {url: "/api/devices1", name: "4号楼探测器"},
-        {url: "/api/devices2", name: "6号楼探测器"},
-        {url: "/api/devices3", name: "4号楼断路器"},
-        {url: "/api/devices4", name: "3号楼断路器"},
-        {url: "/api/devices5", name: "3号楼探测器"},
-        {url: "/api/devices6", name: "2号楼断路器"},
-        {url: "/api/devices7", name: "2号楼探测器"},
-        {url: "/api/devices8", name: "6号楼断路器"}
+        {url: "/api/devices6", name: "2# 断路器"},
+        {url: "/api/devices7", name: "2# 探测器"},
+        {url: "/api/devices4", name: "3# 断路器"},
+        {url: "/api/devices5", name: "3# 探测器"},
+        {url: "/api/devices3", name: "4# 断路器"},
+        {url: "/api/devices1", name: "4# 探测器"},
+        {url: "/api/devices8", name: "6# 断路器"},
+        {url: "/api/devices2", name: "6# 探测器"},
+        {url: "/api/devices", name: "7# 断路器"},
+        {url: "/api/devices9", name: "7# 探测器"},
       ],
       currentIndex: 0,
       barChartConfig: {
@@ -125,7 +125,9 @@ export default {
           splitNumber: 5,
           radius: ["0%", "55%"], // 调整雷达图的半径
           name: {
-            textStyle: {color: "rgb(238, 197, 102)"}
+            textStyle: {
+              color: "rgb(241,167,0)"
+            }
           },
           splitLine: {
             lineStyle: {

@@ -46,7 +46,7 @@ Vue.use(digitalFlop)
 Vue.use(capsuleChart)
 // 创建全局 axios 实例
 const axiosInstance = axios.create({
-  baseURL: "http://122.51.210.27:8030", // 全局基础 URL，直接修改此处以更换服务器
+  baseURL: "http://116.198.235.66:8030", // 全局基础 URL，直接修改此处以更换服务器
   timeout: 10000,
 });
 // 将 axios 实例挂载到 Vue 原型上

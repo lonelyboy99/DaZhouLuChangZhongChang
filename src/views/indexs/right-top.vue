@@ -2,16 +2,16 @@
   <div class="status-display">
     <div class="status-row">
       <div class="status-item">
-        <p style="color: #00d2e8">正常使用率</p>
+        <p style="color: #00d2e8">在线率</p>
         <div ref="normalRateChart" class="chart"></div>
       </div>
       <div class="status-item">
-        <p style="color: #359a97">故障率</p>
+        <p style="color: #359a97">离线率</p>
         <div ref="faultRateChart" class="chart"></div>
       </div>
     </div>
     <div class="status-row bar-chart">
-      <p style="color: rgba(156,107,211,0.8)">信号强度</p>
+      <p style="color: #6bfbce">信号强度</p>
       <div ref="barChart" class="chart"></div>
     </div>
   </div>
@@ -33,6 +33,13 @@ export default {
   mounted() {
     this.fetchData();
     this.initCharts();
+    this.getDataHandle = setInterval(() => {
+      this.fetchData();
+      this.initCharts();
+    },10000)
+  },
+  beforeDestroy() {
+    clearInterval(this.getDataHandle)
   },
   methods: {
     async fetchData() {
@@ -42,8 +49,8 @@ export default {
           const { totalDevices, offlineDevices, devices } = response.data.data;
 
           // 正常使用率和故障率计算
-          this.normalRate = ((totalDevices - offlineDevices) / totalDevices) * 100;
-          this.faultRate = (offlineDevices / totalDevices) * 100;
+          this.normalRate = Math.floor((totalDevices - offlineDevices) / totalDevices * 100);
+          this.faultRate = Math.floor((offlineDevices / totalDevices) * 100);
 
           // 从设备列表中提取设备名称和信号质量数据
           this.deviceNames = devices.map(device => device.deviceName);
@@ -145,7 +152,7 @@ export default {
           {
             data: this.signalIntensityData, // 信号质量数据
             type: 'bar',
-            barWidth: '60%',
+            barWidth: '70%',
             itemStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                 {offset: 0, color: "rgba(156,107,211,0.8)"},

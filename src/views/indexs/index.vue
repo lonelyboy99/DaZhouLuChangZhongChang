@@ -1,59 +1,69 @@
 <template>
   <div class="contents">
     <div class="contetn_left">
-      <ItemWrap class="contetn_left-top contetn_lr-item" title="设备监控" :disableZoom="true">
+      <div class="pagetab">
+        <div class="item">实时监测</div>
+        <div class="item">MQTT:{{ mqttConnectionStatus }}</div>
+      </div>
+      <ItemWrap class="contetn_left-top contetn_lr-item-top"
+                title="在线情况"
+                :disableZoom="true">
         <LeftTop/>
       </ItemWrap>
-      <ItemWrap class="contetn_left-center contetn_lr-item" title="AI预测">
-        <LeftCenter/>
+
+      <ItemWrap class="contetn_left-center contetn_lr-item-center"
+                title="辅助决策"
+                :disableZoom="false">
+                <LeftCenter/>
       </ItemWrap>
-      <!--      <ItemWrap class="content_left-item" title="详细数据" :disableZoom="true">-->
-      <!--        <LeftBottomTop/>-->
-      <!--      </ItemWrap>-->
+
       <ItemWrap class="contetn_left-bottom contetn_lr-item"
-                title="AI数据分析"
-                :disableZoom="true"
-                style="padding: 0 10px 16px 10px"
-      >
-        <LeftBottom/>
+                title="安全监测"
+                :disableZoom="true">
+        <RightBottom/>
       </ItemWrap>
     </div>
     <div class="contetn_center">
-      <CenterMap class="contetn_center_top" />
-      <ItemWrap class="contetn_center-bottom" title="图表展示">
+      <ItemWrap class="contetn_center-center"
+                title="各车间情况表"
+                :disableZoom="true">
+        <LeftBottom/>
+      </ItemWrap>
+      <ItemWrap class="contetn_center-bottom"
+                title="AI超前预警"
+                :disableZoom="true">
         <CenterBottom/>
       </ItemWrap>
     </div>
-      <div class="contetn_right">
-      <ItemWrap class="contetn_left-bottom contetn_lr-item"
-                title="使用情况"
-                :disableZoom="true">
-        <RightTop/>
-      </ItemWrap>
-      <ItemWrap class="contetn_left-bottom contetn_lr-item"
-                title="数据展示" :disableZoom="true">
-        <RightCenter/>
-      </ItemWrap>
-      <ItemWrap class="contetn_left-bottom contetn_lr-item"
-                title="在线情况" :disableZoom="true">
-        <RightBottom/>
-      </ItemWrap>
-      <!--      <ItemWrap class="content_right-item" title="报警详情">-->
-      <!--        <RightBottom/>-->
-      <!--      </ItemWrap>-->
-    </div>
+    <!--    <div class="contetn_right">-->
+    <!--      <ItemWrap class="contetn_left-bottom contetn_lr-item"-->
+    <!--                title="使用情况"-->
+    <!--                :disableZoom="true">-->
+    <!--        <RightTop/>-->
+    <!--      </ItemWrap>-->
+
+    <!--      <ItemWrap class="contetn_left-bottom contetn_lr-item"-->
+    <!--                title="数据展示" :disableZoom="false">-->
+    <!--        <RightCenter/>-->
+    <!--      </ItemWrap>-->
+
+    <!--      <ItemWrap class="contetn_left-bottom contetn_lr-item"-->
+    <!--                title="联控监测" :disableZoom="true">-->
+    <!--        <RightBottom/>-->
+    <!--      </ItemWrap>-->
+    <!--    </div>-->
   </div>
 </template>
 
 <script>
 import LeftTop from './left-top.vue'
-import LeftCenter from "./left-center-prediction.vue";
-import LeftBottom from "./left-extra.vue";
-import CenterMap from "./center-map.vue";
 import CenterBottom from "./center-bottom.vue";
+import LeftBottom from "./left-bottom.vue";
+import CenterMap from "./center-map.vue";
+import LeftCenter from "./Left-center.vue";
 import RightTop from "./right-top.vue";
-import RightCenter from "./right-center-light.vue";
-import RightBottom from "./left-bottom.vue";
+import RightCenter from "./right-center.vue";
+import RightBottom from "./right-bottom.vue";
 import mqtt from "mqtt";
 
 export default {
@@ -79,9 +89,9 @@ export default {
   methods: {
     initMqtt() {
       let options = {
-        connectTimeout: 4000, // 超时时间
-        clientId: '', // 默认随机生成一个ID
-        protocol: 'ws', // 使用 WebSocket
+        connectTimeout: 4000,
+        clientId: '',
+        protocol: 'ws',
       };
       this.client = mqtt.connect('ws://122.51.210.27:8083/mqtt', options);
 
@@ -91,7 +101,7 @@ export default {
       });
 
       this.client.on('reconnect', (error) => {
-        this.mqttConnectionStatus = '正在重连';
+        this.mqttConnectionStatus = '重连中';
       });
 
       this.client.on('error', (error) => {
@@ -99,7 +109,7 @@ export default {
       });
     },
     subscribes() {
-      const arr = ['transparent/req'];
+      const arr = ['led/emqx'];
       this.client.subscribe(arr, {qos: 1}, (err) => {
         if (!err) {
           console.log(`主题为：“${arr}” 的消息订阅成功`);
@@ -147,12 +157,18 @@ export default {
   }
 
   .contetn_center {
-    width: 720px;
+    width: 1260px;
   }
 
   //左右两侧 三个块
   .contetn_lr-item {
-    height: 310px;
+    height: 380px;
+  }
+  .contetn_lr-item-top {
+    height: 240px;
+  }
+  .contetn_lr-item-center {
+    height: 340px;
   }
 
   .contetn_center_top {
@@ -166,6 +182,10 @@ export default {
     justify-content: space-around;
   }
 
+  .contetn_center-center {
+    height: 615px;
+  }
+
   .contetn_center-bottom {
     height: 315px;
   }
@@ -177,8 +197,6 @@ export default {
     flex-direction: column;
     justify-content: space-around;
     position: relative;
-
-
   }
 }
 

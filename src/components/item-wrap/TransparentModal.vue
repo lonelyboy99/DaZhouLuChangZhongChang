@@ -85,7 +85,7 @@ h3{
   right: 10px; /* 距离右边10px */
   color: #FFFFFF; /* 文字颜色 */
   cursor: pointer; /* 鼠标悬停时显示指针 */
-  font-size: 30px; /* 文字大小 */
+  font-size: 20px; /* 文字大小 */
 
   &:hover {
     color: #2980b9; /* 悬停时的颜色 */

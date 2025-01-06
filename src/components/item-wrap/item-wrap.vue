@@ -110,11 +110,11 @@ $item_title_content-height: calc(100% - 38px);
 
   .zoom-button {
     position: absolute;
-    bottom: 25px; /* 距离底部10px */
+    bottom: 10px; /* 距离底部10px */
     right: -10px; /* 距离右边10px */
-    color: #3498db; /* 文字颜色 */
+    color: #e0e5e8; /* 文字颜色 */
     cursor: pointer; /* 鼠标悬停时显示指针 */
-    font-size: 13px; /* 文字大小 */
+    font-size: 15px; /* 文字大小 */
 
     &:hover {
       color: #e8dbdf;

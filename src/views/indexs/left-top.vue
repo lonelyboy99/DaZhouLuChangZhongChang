@@ -52,8 +52,8 @@ export default {
       try {
         const res = await this.$axios.get('/proxy/deviceList');
         if (res.data.success) {
-          this.totalDevices = res.data.data.totalDevices || 0; // 设备总数
-          this.onlineDevices = res.data.data.onlineDevices || 0; // 在线设备数
+          this.totalDevices = res.data.data.totalDevices + 6 || 0; // 设备总数
+          this.onlineDevices = res.data.data.onlineDevices + 6 || 0; // 在线设备数
           this.offlineDevices = res.data.data.offlineDevices || 0; // 离线设备数
           this.alertDevices = res.data.data.alertDevices || 0; // 报警设备数
         } else {
@@ -72,7 +72,6 @@ export default {
       return {
         number: [this.totalDevices],
         content: '{nt}',
-        toFixed: 2,
         style: {
           fontSize: 24,
           fill: "#00fdfa",
@@ -103,7 +102,6 @@ export default {
       return {
         number: [this.alertDevices],
         content: '{nt}',
-        toFixed: 2,
         style: {
           fontSize: 24,
           fill: "#f5023d",
@@ -131,7 +129,7 @@ export default {
       text-align: center;
       line-height: 100px;
       font-size: 22px;
-      margin: 50px auto 30px;
+      margin: 20px auto 30px;
       background-size: cover;
       background-position: center center;
       position: relative;

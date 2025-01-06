@@ -1,10 +1,5 @@
 <template>
   <div class="centermap">
-    <div class="maptitle">
-      <div class="zuo"></div>
-      <span class="titletext">{{ maptitle }}</span>
-      <div class="you"></div>
-    </div>
     <div class="mapwrap">
       <dv-border-box-13>
         <Echart id="CenterMap" :options="options" ref="CenterMap" />
@@ -40,7 +35,7 @@ export default {
           dataList: [
             {
               cityCode: "320114",
-              device_count: 9 // 设备数量固定为 9
+              device_count: 15 // 设备数量固定为 9
             }
           ]
         }
@@ -140,12 +135,12 @@ export default {
           inRange: {
             // 渐变颜色，从小到大
             color: [
-              "#c3d7df",
-              "#5cb3cc",
-              "#8abcd1",
-              "#66a9c9",
-              "#2f90b9",
-              "#1781b5",
+              "#007760",
+              "#009453",
+              "#00b141",
+              "#56cb29",
+              "#aee205",
+              "#fff500",
             ],
           },
           textStyle: {
