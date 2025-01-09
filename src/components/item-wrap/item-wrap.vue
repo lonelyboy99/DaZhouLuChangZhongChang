@@ -8,33 +8,31 @@
     <div :class="title !== '' ? 'item_title_content' : 'item_title_content_def'">
       <slot></slot>
       <!-- 只有在 disableZoom 为 false 时才显示放大按钮 -->
-      <div v-if="!disableZoom" @click="visible = true" class="zoom-button">详情</div>
+      <div v-if="!disableZoom" @click="visible = true" class="zoom-button">工单操作</div>
     </div>
-
-    <!-- 放大弹窗 -->
-    <TransparentModal :visible="visible" title="详情" @close="visible = false" :width="modalWidth" :height="modalHeight">
-      <slot></slot> <!-- 在弹窗中再次显示slot内容 -->
-    </TransparentModal>
+    <t-dialog
+        :visible.sync="visible"
+        :confirmBtn="null"
+        header="工单操作"
+        top="4%"
+        width=1400
+    >
+      <div class="dialog-body">
+        <WorkOrder />
+      </div>
+    </t-dialog>
   </dv-border-box-13>
 </template>
 
 <script>
 import TransparentModal from '../item-wrap/TransparentModal.vue'; // 引入弹窗组件
-
+import WorkOrder from '../item-wrap/work-order.vue';
 export default {
-  components: {TransparentModal},
+  components: {TransparentModal,WorkOrder},
   props: {
     title: {
       type: String,
       default: "",
-    },
-    modalWidth: {
-      type: String,
-      default: "90%",
-    },
-    modalHeight: {
-      type: String,
-      default: "90%",
     },
     disableZoom: {
       type: Boolean,
@@ -114,11 +112,18 @@ $item_title_content-height: calc(100% - 38px);
     right: -10px; /* 距离右边10px */
     color: #e0e5e8; /* 文字颜色 */
     cursor: pointer; /* 鼠标悬停时显示指针 */
-    font-size: 15px; /* 文字大小 */
+    font-size: 20px; /* 文字大小 */
 
     &:hover {
       color: #e8dbdf;
     }
   }
 }
+.dialog-body {
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh; /* 最大高度占屏幕 80% */
+  overflow: hidden; /* 隐藏溢出 */
+}
+
 </style>

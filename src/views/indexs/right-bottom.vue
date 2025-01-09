@@ -204,7 +204,7 @@ export default {
 
         // 合并所有设备
         this.list = [...loraDevices, ...otherDevices, fixedDevice];
-        console.log(this.list);
+
         let timer = setTimeout(() => {
           clearTimeout(timer);
           this.defaultOption.step = this.$store.state.setting.defaultOption.step;
