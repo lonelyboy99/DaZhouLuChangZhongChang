@@ -8,12 +8,12 @@
     <div :class="title !== '' ? 'item_title_content' : 'item_title_content_def'">
       <slot></slot>
       <!-- 只有在 disableZoom 为 false 时才显示放大按钮 -->
-      <div v-if="!disableZoom" @click="visible = true" class="zoom-button">工单操作</div>
+      <div v-if="!disableZoom" @click="visible = true" class="zoom-button">日志操作</div>
     </div>
     <t-dialog
         :visible.sync="visible"
         :confirmBtn="null"
-        header="工单操作"
+        header="日志操作"
         top="4%"
         width=1400
     >

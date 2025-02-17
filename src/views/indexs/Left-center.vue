@@ -59,20 +59,20 @@ export default {
     return {
       list: [],
       apiList: [
-        { url: "/api/devices6", name: "2#幢" },
-        { url: "/api/devices4", name: "3#幢" },
-        { url: "/api/devices3", name: "4#幢" },
-        { url: "/api/devices8", name: "6#幢" },
-        { url: "/api/devices", name: "7#幢" },
+        {url: "/api/devices6", name: "2#幢"},
+        {url: "/api/devices4", name: "3#幢"},
+        {url: "/api/devices3", name: "4#幢"},
+        {url: "/api/devices8", name: "6#幢"},
+        {url: "/api/devices", name: "7#幢"},
       ],
       normalRanges: {
-        "A相电压": { min: 210, max: 250 },
-        "B相电压": { min: 210, max: 250 },
-        "C相电压": { min: 210, max: 250 },
-        "A相电流": { min: 0, max: 100 },
-        "B相电流": { min: 0, max: 100 },
-        "C相电流": { min: 0, max: 100 },
-        "剩余电流": { min: 0, max: 30 },
+        "A相电压": {min: 210, max: 250},
+        "B相电压": {min: 210, max: 250},
+        "C相电压": {min: 210, max: 250},
+        "A相电流": {min: 0, max: 100},
+        "B相电流": {min: 0, max: 100},
+        "C相电流": {min: 0, max: 100},
+        "剩余电流": {min: 0, max: 30},
       },
     };
   },
@@ -84,18 +84,18 @@ export default {
   },
   methods: {
     async fetchDeviceData() {
-      const promises = this.apiList.map(({ url, name }) =>
+      const promises = this.apiList.map(({url, name}) =>
           this.$axios.get(url).then(async (res) => {
             if (res.data.success) {
               const snap = res.data.data.list[0];
               const newList = [
-                { name: "A相电压", value: parseFloat(snap.a_voltage) },
-                { name: "B相电压", value: parseFloat(snap.b_voltage) },
-                { name: "C相电压", value: parseFloat(snap.c_voltage) },
-                { name: "A相电流", value: parseFloat(snap.a_current) },
-                { name: "B相电流", value: parseFloat(snap.b_current) },
-                { name: "C相电流", value: parseFloat(snap.c_current) },
-                { name: "剩余电流", value: parseFloat(snap.remaindeRelectric) },
+                {name: "A相电压", value: parseFloat(snap.a_voltage)},
+                {name: "B相电压", value: parseFloat(snap.b_voltage)},
+                {name: "C相电压", value: parseFloat(snap.c_voltage)},
+                {name: "A相电流", value: parseFloat(snap.a_current)},
+                {name: "B相电流", value: parseFloat(snap.b_current)},
+                {name: "C相电流", value: parseFloat(snap.c_current)},
+                {name: "剩余电流", value: parseFloat(snap.remaindeRelectric)},
               ];
 
               const issues = newList.filter(
@@ -149,7 +149,7 @@ export default {
                 await this.$axios.post("/api/work_order/sync", recoveryPayload);
 
                 // 返回正常状态
-                return { workshop_id: name, fault_description: "无异常", state: 1 };
+                return {workshop_id: name, fault_description: "无异常", state: 1};
               }
             }
           })
@@ -167,11 +167,14 @@ export default {
 
 <style scoped>
 .workshop-name {
-  font-size: 30px;
+  font-size: 20px;
   font-weight: bold;
   margin-right: 10px;
   margin-left: 10px;
+  white-space: nowrap; /* 防止文字换行 */
+  flex-shrink: 0; /* 防止缩小 */
 }
+
 .decision_support_wrap {
   width: 100%;
   height: 100%;
@@ -182,6 +185,7 @@ export default {
   display: flex;
   align-items: center;
   margin-bottom: 20px;
+  flex-wrap: wrap; /* 允许内容换行 */
 }
 
 .status-light {
@@ -189,6 +193,7 @@ export default {
   height: 20px;
   border-radius: 50%;
   margin-right: 10px;
+  flex-shrink: 0; /* 防止缩小 */
 }
 
 .light-red-blink {
@@ -202,6 +207,10 @@ export default {
 
 .issue-summary {
   color: red;
+  display: flex;
+  flex-direction: column; /* 让故障描述在竖直方向排列 */
+  max-width: 80%; /* 限制故障说明的最大宽度 */
+  word-wrap: break-word; /* 确保长单词自动换行 */
 }
 
 .issue-item {
@@ -211,14 +220,19 @@ export default {
 .suggestion-item {
   color: white;
 }
+
 .normal-text {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: bold;
 }
+
 .issue-text {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: bold;
+  overflow: hidden;
+  white-space: wrap; /* 防止换行 */
 }
+
 @keyframes blink {
   0% {
     opacity: 1;
